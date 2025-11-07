@@ -3,7 +3,7 @@
 Tested on Intel x64/Ubuntu 22.04.
 
 ```sh
-git clone https://github.com/acp-lab/pybullet-crazyflie.git
+git clone https://github.com/acp-lab/rbe-502-crazyflie-project.git
 cd gym-pybullet-drones/
 
 conda create -n drones python=3.10
