@@ -36,8 +36,14 @@ class DSLPIDControl(BaseControl):
 
         # You can initialize more parameters here
 
+        self.K_p = np.array([0.2, 0.2, 1])
+        self.K_d = np.array([0.15, 0.15, 0.4])
+        self.K_p_att = np.diag([500000, 500000, 100000])  # Roll, pitch, yaw
+        self.K_d_att = np.diag([100000, 100000, 50000])  # Roll, pitch, yaw rates
+        self.max_tilt = np.pi / 4
+        
         # Your code ends here
-
+        
         ######################################################
         # Do not change these parameters below
         self.PWM2RPM_SCALE = 0.2685
@@ -150,14 +156,14 @@ class DSLPIDControl(BaseControl):
         return rpm, pos_e, computed_target_rpy
     
     def _dslPIDPositionControl(self,
-                               control_timestep,
-                               cur_pos,
-                               cur_quat,
-                               cur_vel,
-                               target_pos,
-                               target_rpy,
-                               target_vel,
-                               target_acc,
+                               control_timestep: float,
+                               cur_pos: np.ndarray,
+                               cur_quat: np.ndarray,
+                               cur_vel: np.ndarray,
+                               target_pos: np.ndarray,
+                               target_rpy: np.ndarray,
+                               target_vel: np.ndarray,
+                               target_acc: np.ndarray,
                                mass = 0.29
                                ):
         """DSL's CF2.x PID position control.
@@ -194,12 +200,37 @@ class DSLPIDControl(BaseControl):
         """
 
         #Write your code here
-
-        target_thrust = np.zeros(3)
-        target_rpy = np.zeros(3)
-        pos_e = np.zeros(3)
-        cur_rotation = np.zeros((3,3))
-
+        
+        pos_e = target_pos - cur_pos
+        vel_e = target_vel - cur_vel
+        R = Rotation.from_quat(cur_quat, scalar_first=False).as_matrix()
+        
+        _, _, target_yaw = target_rpy
+        
+        thrust_direction = self.K_p * pos_e + self.K_d * vel_e + mass * target_acc + np.array([0, 0, self.GRAVITY]) 
+        xy_thrust = thrust_direction[:2]
+        z_thrust = thrust_direction[2]  
+        
+        
+        horiz_thrust_max = z_thrust * np.tan(self.max_tilt)
+        thrust_ratio = horiz_thrust_max / np.linalg.norm(xy_thrust)
+        if thrust_ratio < 1:
+            xy_thrust *= thrust_ratio
+        
+        target_thrust = np.array([xy_thrust[0], xy_thrust[1], z_thrust])
+        
+        zdb = target_thrust / np.linalg.norm(target_thrust)
+        xdc = np.asarray([np.cos(target_yaw), np.sin(target_yaw), 0])
+        
+        zcrossx = np.cross(zdb, xdc)
+        
+        ydb = zcrossx / np.linalg.norm(zcrossx)
+        xdb = np.cross(ydb, zdb)
+        
+        Rd = np.column_stack([xdb, ydb, zdb])
+        roll, pitch, yaw = Rotation.from_matrix(Rd).as_euler('xyz', degrees=False)
+        target_rpy = np.array([roll, pitch, yaw])
+        cur_rotation = R
         #Your code ends here
 
         return target_thrust, target_rpy, pos_e, cur_rotation
@@ -235,8 +266,16 @@ class DSLPIDControl(BaseControl):
         """
 
         #Write your code here
-
-        target_torques = np.zeros(3)
+        
+        curr_R = Rotation.from_quat(cur_quat, scalar_first=False).as_matrix()
+        R_d = Rotation.from_euler("xyz", target_euler).as_matrix()
+                
+        skew_sym = R_d.T @ curr_R - curr_R.T @ R_d
+        e_R = 0.5 * np.array([skew_sym[2,1], skew_sym[0,2], skew_sym[1,0]])
+                
+        e_omega = target_rpy_rates - cur_ang_vel
+                
+        target_torques = -self.K_p_att @ e_R + self.K_d_att @ e_omega
 
         #Your code ends here
 
