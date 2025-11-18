@@ -26,7 +26,6 @@ def plot(trajectory: List[Dict[str, any]], traj_name:str, tf:int, dt:float=0.01)
             - 'yawdot' (float): Desired yaw rate (set to zero).
         
         dt (float, optional): what delta time to use when plotting trajectory. Defaults to 0.01.
-
     """
     if not trajectory:
         print("empty trajecotry")
@@ -46,9 +45,7 @@ def plot(trajectory: List[Dict[str, any]], traj_name:str, tf:int, dt:float=0.01)
         vel = vel.squeeze(axis=1)
     if acc.ndim == 3 and acc.shape[1] == 1:
         acc = acc.squeeze(axis=1)
-    
-    print(pos.shape)
-    
+        
     fig = plt.figure(figsize=(16,10))
     
     ax1 = fig.add_subplot(1, 2, 1, projection='3d')
@@ -97,13 +94,6 @@ def plot(trajectory: List[Dict[str, any]], traj_name:str, tf:int, dt:float=0.01)
     
     plt.tight_layout()
     plt.show()
-
-    
-    
-
-
-
-
 
 
 
