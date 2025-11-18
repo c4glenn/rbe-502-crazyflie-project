@@ -3,7 +3,7 @@ import numpy as np
 
 RADIUS = 1
 HOVER_HEIGHT = 1
-OMEGA = 3
+OMEGA = 1
 START_POS = np.array([0, 0, 0.5])
 START_VEL = np.array([0, 0, 0])
 START_ACC = np.array([0, 0, 0])
@@ -34,7 +34,9 @@ def get_polynomial_acc(t:float, a:np.ndarray) -> np.ndarray:
 
 
 def M_matrix(t: float) -> np.ndarray:
-    return np.array([[1, t, t**2, t**3, t**4, t**5], [0, 1, 2*t, 3*t**2, 4*t**3, 5*t**4], [0, 0, 2, 6*t, 12*t**2, 20*t**3]])
+    return np.array([[1, t, t**2, t**3, t**4, t**5], 
+                     [0, 1, 2*t, 3*t**2, 4*t**3, 5*t**4], 
+                     [0, 0, 2, 6*t, 12*t**2, 20*t**3]])
 
 def create_polynomial_trajectory(start_pos: np.ndarray, start_vel: np.ndarray, start_acc: np.ndarray, start_time: float, end_pos: np.ndarray, end_vel: np.ndarray, end_acc: np.ndarray, end_time: float) -> np.ndarray:
     """Create a polynomial trajectory 
