@@ -50,11 +50,14 @@ class Trajectory:
             for time_idx, time in enumerate(sorted_time[:-1]):
                 next_time = sorted_time[time_idx + 1]
                 self.traj[(time, next_time)] = find_coefs(time, next_time, self.points[time], self.points[next_time], self.num_derivs)
+                self.points.pop(time)
         else:
             B = np.vstack([self.points[t] for t in sorted_time]) 
             A = np.vstack([M_matrix(t, B.shape[0], self.num_derivs) for t in sorted_time])
             print(A)
             self.traj[(sorted_time[0], sorted_time[-1])] = np.linalg.solve(A, B)
+            for t in sorted_time[:-1]:
+                self.points.pop(t)
         return self
     
     def get_values(self, time:float):
