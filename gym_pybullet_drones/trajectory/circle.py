@@ -13,10 +13,6 @@ start_to_circ = Trajectory(3).add_point(0.0, START).add_point(5.0, CIRCLE_POINT)
 circ_to_start = Trajectory(3).add_point(10.0, CIRCLE_POINT).add_point(15.0, START).build()
 theta_traj = Trajectory(3).add_point(0.0, np.array([[0.0], [0.0], [0.0]])).add_point(5.0, np.array([[2 * np.pi], [0.0], [0.0]])).build()
 
-# for arr in omega_traj.traj.values():
-#     for i in arr:
-#         print(i[0])
-
 def get_omega(t):
     return theta_traj.get_values(t)[0][0] * 1/t
 def get_omega_dot(t):
